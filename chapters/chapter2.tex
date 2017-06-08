@@ -94,7 +94,7 @@ $k$ 為迭代（Iteration）的次數， $\eta$ 為學習率（Learning Rate）�
 \begin{figure}[b]
     \centering
     \includegraphics[scale=0.25]{images/chap2_rnn.png}
-    \caption{遞迴式神經網路示意圖}\label{fig:chap2_rnn}
+    \caption{遞迴式神經網路示意圖\cite{shen2016} }\label{fig:chap2_rnn}
 \end{figure}
 \subsection{簡介}
 雖然深層類神經網路擁有很好的分類能力，但是當輸入資料呈現序列狀（Sequential），且有上下文關係（Context Dependency）時，如語音辨識（Speech Recongnition）、自然語言理解（Nature Language Understanding），這時候深層類神經網路就無法妥善處理。因此這時候需要記憶細胞（Memory Cell）來幫助，即是遞迴式類神經網路，圖 ~\ref{fig:chap2_rnn} 為其架構。不同於深層類神經網路，它是帶有循環的神經網路。在圖 ~\ref{fig:chap2_rnn} 中， $A$ 代表神經網路的主體， $x_t$ 代表在時間點 t 時的輸入， $h_t$ 代表在時間點 t 時的網路輸出，這種循環結構能使資訊從前面傳遞到後面，能夠允許資訊保留一段時間。我們將迴圈展開後，不難發現其可根據輸入資料的序列關係展開成一鏈狀結構，如圖 ~\ref{fig:chap2_unrollrnn} 所示，因此我們可以將遞迴神經網路想像成是有多層相同的神經網路，每一層都會將資訊傳遞給下一層。
@@ -102,7 +102,7 @@ $k$ 為迭代（Iteration）的次數， $\eta$ 為學習率（Learning Rate）�
 \begin{figure}[h]
     \centering
     \includegraphics[scale=0.3]{images/chap2_unrollrnn.png}
-    \caption{遞迴式神經網路展開示意圖}\label{fig:chap2_unrollrnn}
+    \caption{遞迴式神經網路展開示意圖\cite{shen2016} }\label{fig:chap2_unrollrnn}
 \end{figure}
 
 %\subsection{沿時間反向傳播演算法（Backpropagation through Time, BPTT）}
@@ -119,7 +119,7 @@ $k$ 為迭代（Iteration）的次數， $\eta$ 為學習率（Learning Rate）�
 \begin{figure}[h]
     \centering
     \includegraphics[scale=0.35]{images/chap2_forget.png}
-    \caption{遺忘閘示意圖}\label{fig:forget}
+    \caption{遺忘閘示意圖\cite{shen2016} }\label{fig:forget}
 \end{figure}
 \begin{equation}
     f_t = \phi(W_{xf}x_t + W_{hf}h_{t-1} + b_f) \label{function:forget}
@@ -129,7 +129,7 @@ $k$ 為迭代（Iteration）的次數， $\eta$ 為學習率（Learning Rate）�
 \begin{figure}[h]
     \centering
     \includegraphics[scale=0.35]{images/chap2_input.png}
-    \caption{輸入閘示意圖}\label{fig:input_gate}
+    \caption{輸入閘示意圖\cite{shen2016} }\label{fig:input_gate}
 \end{figure}
 \begin{equation}
     i_t = \phi(W_{xi}x_t + W_{hi}h_{t-1} + b_i) \label{function:input_gate}
@@ -141,7 +141,7 @@ $k$ 為迭代（Iteration）的次數， $\eta$ 為學習率（Learning Rate）�
 \begin{figure}[h]
     \centering
     \includegraphics[scale=0.35]{images/chap2_update.png}
-    \caption{更新管理單元狀態}\label{fig:update}
+    \caption{更新管理單元狀態\cite{shen2016} }\label{fig:update}
 \end{figure}
 \begin{equation}
     C_t = f_t * C_{t-1} + i_t * C_t^{'} \label{function:update}
@@ -150,7 +150,7 @@ $k$ 為迭代（Iteration）的次數， $\eta$ 為學習率（Learning Rate）�
 \begin{figure}[h]
     \centering
     \includegraphics[scale=0.35]{images/chap2_output.png}
-    \caption{輸出閘示意圖}\label{fig:output_gate}
+    \caption{輸出閘示意圖\cite{shen2016} }\label{fig:output_gate}
 \end{figure}
 \begin{equation}
     o_t =  \phi(W_{xo}x_t + W_{ho}h_{t-1} + b_o) \label{function:output}
@@ -221,7 +221,7 @@ $k$ 為迭代（Iteration）的次數， $\eta$ 為學習率（Learning Rate）�
 \begin{figure}[h]
     \centering
     \includegraphics[scale=0.35]{images/chap2_skipgram.png}
-    \caption{跳躍文法模型示意圖}\label{fig:skip_gram}
+    \caption{跳躍文法模型示意圖 \cite{shen2016} }\label{fig:skip_gram}
 \end{figure}
 \begin{itemize}
     \item 輸入層：是一個與辭典大小同長度的陣列，採用 1-of-N 編碼形式，而只有該索引的位置之值為 1 ，其餘皆為 0 。此向量用來表示當前詞 $w(t)$ 作為輸入。
@@ -234,13 +234,91 @@ $k$ 為迭代（Iteration）的次數， $\eta$ 為學習率（Learning Rate）�
 
 \section{機器閱讀理解數據集（MAchine Reading COmprehension, MARCO, Dataset）}
 \subsection{問答系統}
-問答系統和資訊檢索（Information Retrieval）系統最大的不同在於，問答系統只針對使用者輸入的問句回傳對應之答案，而不是提供使用者先關的資訊，讓使用者自己找答案。此種系統的優點是，面對龐大的資料量或者是很多複雜內容的文本時，使用者有時候無法從眾多文字中找出對應的答案，因此問答系統透過文字處理，直接將可能的答案回傳，以方便使用者閱覽。
+問答系統可以視為資訊檢索之延伸，在資訊檢索的情形下，系統針對使用者所輸入的查詢詞（Query）回傳相關的文本，然而隨著科技的發展與資訊量的爆炸，我們不只要系統提供給我們文本，甚至是能夠直接提供查詢詞所對應的答案，如此一來，在面對龐大的資料量時，我們便能快速找出符合查詢詞，直接將可能的答案回傳，以方便使用者閱覽。
 
-通常問答系統可以根據答案種類分成三種，仿真陳述問答（Factoid Question Answering）、定義式問答（Definitional Question Answering）、以及複雜式問答（Complex Question Answering）。最基本的類型為仿真陳述問答，此系統根據答案與料所述資訊，取出一小段字串作為答案，由於答案的正確與否是根據答案語料的內容來決定，在現實生活中不一定為真，故稱為仿真陳述問答。而定義式問答通常是要求簡述某個定義，其回答因為自然語言的表達方法有很多，通常答案不會一致，但語義應該是相近的，複雜式問答系統通常沒有一個標準答案，往往跟回答者的主觀想法或者立場有關，因此被視為最困難且難以評估的一種問答，諸如「台灣大學附近的推薦美食有哪些？」。除了這些與問句資訊有關的類型外，最近評鑑會議引進如「時間限制問題」（Temporally Restricted Questions）與「序列問題」（Series of Questions）等複雜的問題類型。時間限制型的問題會在問句中明確指出答案的時間範圍限制，比如說以「民國一百年時的台灣總統是誰」這問句來說，系統必須有根據答案語料結構化資料，或上下文來推論正確答案的能力。
-\subsection{}
-\subsection{知識為基礎之問答系統}
+問答系統可根據問題類型來分成幾類，最基本的是仿真陳述問答（Factoid Question Answering），此類系統是根據所提供資訊，答案的正確與否是根據所提供的內容來決定，在現實生活中不一定為真，故稱為仿真陳述問答。若是要求簡述某個定義，如「語音文件的定義為何？」，則稱為定義式問答（Definitional Question Answering），通常文字描述會不太一樣，但語義應該是一致的。另外有一種是要求問答系統如「請列舉台灣有哪些縣市？」，此種稱為清單問答（List Question Answering）。除了這些與問句資訊有關的類型外，最近評鑑會議引進如「時間限制問題」（Temporally Restricted Question）之複雜的問題類型，時間限制型的問題會在問句中明確指出答案的時間範圍限制，比如說以「民國一百年時的台灣總統是誰？」這問句來說，系統必須有根據答案語料結構化資料，或上下文來推論正確答案的能力。而過去常見處理這類型的問題，通常會將文本的每個句子與查詢詞解析（Parse）成三元組（Triplet），並試圖從所有三元組中，找出所有符合查詢詞所解析之三元組。
 
-\subsection{類神經網路之問答系統}
+在深度學習中，大量的數據是必備的，才能夠有效且成功地訓練出好的模型，也因此各個領域紛紛釋出大量的數據集，已讓多個領域有著顯著的突破，如在圖像領域中，有大規模圖像識別競賽（Large Scale Visual Recognition Challenge, ILSVRC）釋出的 ImageNet \cite{imagenet_cvpr09} ，其中包含 150 萬張圖片與其圖片所包含物件的種類共 1000 個；在語音領域中，則有 TIMIT 、 Switchboard 、 LibriSpeech 等高達 1000 小時的語音語料（Corpus），然而，在閱讀理解（Reading Comprehension, RC）相對於其他領域的語料庫而言，並沒有如此大量的語料，抑或是各有著顯著的缺點，如：數據集可能不夠大量、文章是機器合成的（Synthetic）等等。
+%問答系統和資訊檢索（Information Retrieval）系統最大的不同在於，問答系統只針對使用者輸入的問句回傳對應之答案，而不是提供使用者先關的資訊，讓使用者自己找答案。此種系統的優點是，面對龐大的資料量或者是很多複雜內容的文本時，使用者有時候無法從眾多文字中找出對應的答案，因此問答系統透過文字處理，直接將可能的答案回傳，以方便使用者閱覽。
 
+%通常問答系統可以根據答案種類分成三種，仿真陳述問答（Factoid Question Answering）、定義式問答（Definitional Question Answering）、以及複雜式問答（Complex Question Answering）。最基本的類型為仿真陳述問答，此系統根據答案與料所述資訊，取出一小段字串作為答案，由於答案的正確與否是根據答案語料的內容來決定，在現實生活中不一定為真，故稱為仿真陳述問答。而定義式問答通常是要求簡述某個定義，其回答因為自然語言的表達方法有很多，通常答案不會一致，但語義應該是相近的，複雜式問答系統通常沒有一個標準答案，往往跟回答者的主觀想法或者立場有關，因此被視為最困難且難以評估的一種問答，諸如「台灣大學附近的推薦美食有哪些？」。除了這些與問句資訊有關的類型外，最近評鑑會議引進如「時間限制問題」（Temporally Restricted Questions）與「序列問題」（Series of Questions）等複雜的問題類型。時間限制型的問題會在問句中明確指出答案的時間範圍限制，比如說以「民國一百年時的台灣總統是誰」這問句來說，系統必須有根據答案語料結構化資料，或上下文來推論正確答案的能力。
+%\subsection{}
+%\subsection{知識為基礎之問答系統}
+%
+%\subsection{類神經網路之問答系統}
 \subsection{語料介紹}
-機器閱讀理解數據集（MAchine Reading COmprehension, MARCO, Dataset）\cite{nguyen2016ms} 是由微軟所提供的語料庫，
+過去幾個著名的閱讀理解的數據集有如 Facebook 的 bAbi \cite{weston2015towards}  、 Microsoft 提供的 MCTest \cite{richardson2013mctest} 和 WikiQA \cite{yang2015wikiqa} 、 Google 所彙集 CNN 和每日郵報 \cite{hermann2015teaching} 的新聞以及史丹佛（Stanford）收集在維基百科相關的約莫 100,000 個問答對（Question-Answer Pair）和 500 多篇文章的數據集，稱為 The Stanford Question Answering Dataset ，簡稱 SQuAD \cite{rajpurkar2016squad} 。然而上述語料各有其致命缺點，舉例來說，bAbi 的句子皆是機器生成的，且答案只會是一個單一詞彙，如圖（\ref{fig:babi}）、 MCTest 是多重選擇題，而真實世界中並不可能有選項讓機器回答、 WikiQA 則是只有約莫 2K 的問答句子，並不夠讓我們訓練出夠深的模型、SQuAD 雖然有十萬左右的問答對，但其答案必定是在文章的某個段落，在真實世界的問答中，答案不可能皆是文章的某個段落。
+
+\begin{figure}[h]
+    %\centering
+    \includegraphics[scale=0.6]{images/chap2_babi.png}
+    \caption{Facebook bAbi 範例}\label{fig:babi}
+\end{figure}
+
+%，數據集的相關介紹如表 \ref{table:dataset} 
+為了促進閱讀理解的發展， Microsoft 因此釋出了機器閱讀理解數據集（MAchine Reading COmprehension, MARCO, Dataset）\cite{nguyen2016ms} ，此數據集是由微軟根據使用者在 Bing 搜尋結果所得之文本，並由人們眾包（Crowdsourcing）所得到的答案。跟其他數據集相比，資料量夠大、不是人工生成的數據（Artificially Generated Data）、答案亦是由人們所產生。表（\ref{table:dataset}）是閱讀理解數據集之比較。
+
+\begin{table}
+    \caption{數據集介紹}
+    \label{table:dataset}
+    \centering
+    \begin{tabular}[t]{|l|l|l|l|}
+        \hline 
+        數據集          &回答問題方式   &問題數目   &文章數目 \\
+        \hline
+        bAbi            &單一詞彙       &約10K      &  \\
+        \hline
+        MCTest          &多重選擇題     &2640       &660 \\
+        \hline
+        WikiQA          &句子選擇       &3047       &29.26K\\
+        \hline
+        CNN/每日郵報    &克漏字填空     &1.4M       &93K CNN,220k DM\\
+        \hline
+        SQuAD           &文章區間       &100K       &536\\
+        \hline
+        MS MARCO        &人類生成       &100K       &200K+文章\\
+        \hline
+    \end{tabular}
+\end{table}
+%\begin{table}
+%    \caption{問句包含詞比例}
+%    \label{table:query_percentage}
+%    \centering
+%    \begin{tabular}[t]{|l|l|}
+%        \hline
+%        問句包含    &比例\\
+%        \hline
+%        what        &42.2\%\\
+%        \hline
+%        how         &15.3\%\\
+%        \hline
+%        where       &4.4\%\\
+%        \hline
+%        when        &2.0\%\\
+%        \hline
+%        why         &1.8\%\\
+%        \hline
+%        who         &1.7\%\\
+%        \hline
+%        which       &1.4\%\\
+%        \hline
+%    \end{tabular}
+%\end{table}
+%\begin{table}
+%    \caption{答案種類}
+%    \label{table:query_type}
+%    \centering
+%    \begin{tabular}[t]{|l|l|}
+%        \hline
+%        描述（Description） &52.6\%\\
+%        \hline
+%        數字（Numberic）    &28.4\%\\
+%        \hline
+%        名詞（Entity）      &10.5\%\\
+%        \hline
+%        地點（Location）    &5.7\%\\
+%        \hline
+%        人物（Person）      &2.7\%\\
+%        \hline
+%    \end{tabular}
+%\end{table}
