@@ -247,7 +247,7 @@ $k$ 為迭代（Iteration）的次數， $\eta$ 為學習率（Learning Rate）�
 %
 %\subsection{類神經網路之問答系統}
 \subsection{語料介紹}
-過去幾個著名的閱讀理解的數據集有如 Facebook 的 bAbi \cite{weston2015towards}  、 Microsoft 提供的 MCTest \cite{richardson2013mctest} 和 WikiQA \cite{yang2015wikiqa} 、 Google 所彙集 CNN 和每日郵報 \cite{hermann2015teaching} 的新聞以及史丹佛（Stanford）收集在維基百科相關的約莫 100,000 個問答對（Question-Answer Pair）和 500 多篇文章的數據集，稱為 The Stanford Question Answering Dataset ，簡稱 SQuAD \cite{rajpurkar2016squad} 。然而上述語料各有其致命缺點，舉例來說，bAbi 的句子皆是機器生成的，且答案只會是一個單一詞彙，如圖（\ref{fig:babi}）、 MCTest 是多重選擇題，而真實世界中並不可能有選項讓機器回答、 WikiQA 則是只有約莫 2K 的問答句子，並不夠讓我們訓練出夠深的模型、SQuAD 雖然有十萬左右的問答對，但其答案必定是在文章的某個段落，在真實世界的問答中，答案不可能皆是文章的某個段落。
+過去幾個著名的閱讀理解的數據集有如 Facebook 的 bAbi \cite{weston2015towards}  、 Microsoft 提供的 MCTest \cite{richardson2013mctest} 和 WikiQA \cite{yang2015wikiqa} 、 Google 所彙集 CNN 和每日郵報 \cite{hermann2015teaching} 的新聞以及史丹佛（Stanford）收集在維基百科相關的約莫 100,000 個問答對（Question-Answer Pair）和 500 多篇文章的數據集，稱為 The Stanford Question Answering Dataset ，簡稱 SQuAD \cite{rajpurkar2016squad} 。然而上述語料各有其致命缺點，舉例來說，bAbi 的句子皆是機器生成的，整體的詞彙大小（Vocabulary Size）非常小，且答案只會是一個單一詞彙，如圖 \ref{fig:babi} 、 MCTest 是多重選擇題，而真實世界中並不可能有選項讓機器回答、 WikiQA 則是只有約莫 2K 的問答句子，並不夠讓我們訓練出夠深的模型、SQuAD 雖然有十萬左右的問答對，但其答案必定是在文章的某個段落，在真實世界的問答中，答案不可能皆是文章的某個段落。
 
 \begin{figure}[h]
     %\centering
