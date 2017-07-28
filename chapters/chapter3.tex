@@ -80,7 +80,8 @@
 \begin{itemize}
     \item 歐式距離：$\alpha_i = ||Q-\overleftrightarrow{f_i}||_{2}$
     \item 餘弦相似性：
-            $\alpha_i = \frac{Q \circ \overleftrightarrow{f_i} }{|Q| |\overleftrightarrow{f_i}| } $ 其中 $\circ$ 為 逐點乘積
+            $\alpha_i = \frac{Q \circ \overleftrightarrow{f_i} }{|Q| |\overleftrightarrow{f_i}| } $ 
+            ，其中 $\circ$ 為 逐點乘積
     \item 類神經網路： $\alpha_i = W_a ([Q ; \overleftrightarrow{f_i}]) $ 
         ，其中 $\alpha_i$ 為一純量（Scalar） $;$ 代表串連兩個向量。
 \end{itemize}
@@ -90,12 +91,13 @@
 \end{equation}
 其中 $m$ 是經由 $Q$ 來初始化，而 $|\cdot|$ 是向量取絕對值。
 
-接著讓 $z_i$ 通過兩層類神經網路，可得一純量 $Z_i$。在得到了專注式權重 $Z_i$ 以後，我們對其做正規化，此處我們選擇「對所有句子的 $\alpha$ 值通過軟性最大化」，透過軟性最大化可以更加強化相關的句子，降低其餘句子的雜訊，如式子（$\ref{function:attention}$）
+接著我們讓 $z_i$ 通過兩層類神經網路，可得一純量 $Z_i$。在得到了專注式權重 $Z_i$ 以後，我們對其做正規化，此處我們選擇「對所有句子的 $\alpha$ 值通過軟性最大化」，通過軟性最大化可以更加強化相關的句子，降低其餘句子的雜訊，如式子（$\ref{function:attention}$）。
 \begin{equation}
     g_i = \frac{exp{(Z_i)}}{\sum_{k=1}^{M} exp(Z_i)} \label{function:attention}
 \end{equation}
 
-結合正規化後的專注式權重 $g_i$ ，我們可對於文章抽取出基於我們想要專注點的語境向量（Contextual Vector），如式子（\ref{function:context_vector}）
+結合正規化後的專注式權重 $g_i$ ，我們可對於文章抽取出基於我們想要專注點的語境向量（Contextual Vector），如式子（\ref{function:context_vector}）。
+%TODO contextual vector 中文
 \begin{equation}
     c = \sum_{i=1}^{M} g_i \overleftrightarrow{f_i} \label{function:context_vector}
 \end{equation}
@@ -107,21 +109,37 @@
 %    \item Deterministic "Soft" Attention
 %\end{itemize}
 \subsubsection{記憶（Memory）}
-下一步則是要更新記憶 $m$ ，一樣透過一個類神經網路，輸入為當前的記憶、語境向量、以及固定的問句表示，進而更新記憶，如式子（\ref{function:update_memory}）
+在得到語境向量後，下一步則是要更新記憶 $m$ ，與計算專注式的權重一樣，通過一個類神經網路，輸入為當前的記憶、語境向量、以及固定的問句表示，進而更新記憶，如式子（\ref{function:update_memory}）。
 \begin{equation}
     m = ReLU(W [m; c; Q] +b) \label{function:update_memory}
 \end{equation}
 \subsubsection{跳躍式機制}
-在此，我們把計算專注式權重的值以及新記憶的值，視為一個循環，我們把它稱為一個跳躍，每經過一次跳躍，相當於是再次讀過句子，重新理解再存入記憶裡。
+在此，我們把計算專注式權重的值以及更新記憶的值，視為一個循環，我們把它稱為一個跳躍，每經過一次跳躍，相當於是再次讀過句子，重新理解再存入記憶裡，如圖 \ref{fig:dmn} 所示，可以更新 t 次。
+%TODO 跳躍式機制=> 回顧
+\subsubsection{解碼器}
+最後再用儲存的記憶連接到一個遞迴式類神經網路，以便解碼出可能的答案，如式子 \ref{function:answer_module} ，而損失函數則是每個字的交叉熵。
+\begin{equation}
+    \label{function:answer_module}
+    \begin{aligned}
+    a_0 = m \\
+    a_t = GRU(y_{t-1}, a_{t-1}) \\
+    y_t = softmax(W^{(a)} a_t)
+    \end{aligned}
+\end{equation}
+
 \section{基本實驗配置}
 \subsection{前置處理}
 \itemsep -4pt
 \begin{itemize}
-    \item 前處理：此數據集包含大量的英文，夾雜部分日文以及標點符號，若是選用所有的詞彙（Vocabulary），會有四十幾萬的詞（Word），我們試著降低詞彙的數量，移除掉標點符號和文本中的網址，並把所有英文字母轉成小寫，最後我們把詞彙量降到了約莫 14 萬個詞。另外，為了再降低複雜度，我們特別對阿拉伯數字進行處理，把所有阿拉伯數字取代成特定標籤，或者是以文本數字出現的順序，分別給予數字一、數字二、數字三等等，把詞彙量降低到 13 萬左右。
-    \item 訓練方法：我們選擇將詞嵌入一併與我們的模型一起訓練。而為了避免過度貼合，對於所有的遞迴式類神經網路，都使用了丟棄演算法，而對於所有的可訓練的（Trainable）權重進行正規化。在回顧機制裡，我們設置回顧次數的範圍在 1 到 3 次。此外我們採用 Negative Sampling 的技巧，來降低整個模型所需要的參數量
-%TODO negative sampling
+    \item 前處理：此數據集包含大量的英文，夾雜部分日文以及標點符號，若是選用所有的詞彙（Vocabulary），會有四十幾萬的詞（Word），我們試著降低詞彙的數量，移除掉標點符號和文本中的網址，並把所有英文字母轉成小寫，最後我們把詞彙量降到了約莫 14 萬個詞。
+    \item 訓練方法：我們選擇將詞嵌入一併與我們的模型一起訓練。而為了避免過度貼合，對於所有的遞迴式類神經網路，都使用了丟棄演算法，而對於所有的可訓練的（Trainable）權重進行正規化。在回顧機制裡，我們設置回顧次數的範圍在 1 到 3 次。此外我們採用 Negative Sampling 的技巧，來降低整個模型所需要的參數量。
+    %TODO negative sampling
+    \item 衡量標準：本論文對於問答系統所使用的衡量標準是 ROUGE （Recall-Oriented Understudy for Gisting Evaluation）\cite{lin2004rouge} ，常用於摘要（Summarization）或機器翻譯，是一種評比參考（Reference）字串和預測（Prediction）字串之間相似程度的量表，包含基於正確 n-元語法（n-gram）的 ROUGE-1 和 ROUGE-2 ，以及基於最長共同子字串（Longest Common Subsequence）長度的 ROUGE-L。ROUGE 值是一個介於 0 至 1 之間的實數，ROUGE 值表示兩字串的相似度越高。本篇論文採用的是 ROUGE-L 的分數。
+
 \end{itemize}
 \subsection{基準實驗}
+我們總共提出兩種基準實驗模型，如圖 \ref{fig:baseline1} 及 \ref{fig:baseline2} 。
+%TODO describe baseline
 \begin{figure}[h]
     \centering
     \includegraphics[scale=0.54]{images/chap3_baseline1.png}
@@ -134,12 +152,78 @@
 \end{figure}
 
 \section{實驗結果與討論}
-\subsection{RNN}
-\subsection{取代數字}
+\subsection{記憶細胞大小}
+\begin{table}
+    \caption{遞迴類神經網路實驗結果}
+    \label{table:RNNCell_size}
+    \centering
+    \begin{tabular}{|l|l|}
+        \hline
+        記憶細胞大小 & ROUGE\\
+        \hline
+        128 & \\
+        \hline
+        256 & \\
+        \hline
+        512 & \\
+        \hline
+    \end{tabular}
+\end{table}
 \subsection{回顧次數}
-\subsection{模型}
+\begin{table}
+    \caption{回顧次數實驗結果}
+    \label{table:hop}
+    \centering
+    \begin{tabular}{|l|l|}
+        \hline
+        回顧次數 & ROUGE\\
+        \hline
+        1 & \\
+        \hline
+        2 & \\
+        \hline
+        3 & \\
+        \hline
+    \end{tabular}
+\end{table}
+\subsection{取代數字}
+另外，為了再降低複雜度，我們特別對阿拉伯數字進行處理，把所有阿拉伯數字取代成特定標籤，或者是以文本數字出現的順序，分別給予數字一、數字二、數字三等等，把詞彙量降低到 13 萬左右。
+\begin{table}
+    \caption{數字處理}
+    \label{table:digit}
+    \centering
+    \begin{tabular}{|l|l|}
+        \hline
+        數字取代方法 & ROUGE\\
+        \hline
+        法一 & \\
+        \hline
+        法二 & \\
+        \hline
+        法三 & \\
+        \hline
+    \end{tabular}
+\end{table}
+\subsection{模型比較}
+\begin{table}
+    \caption{模型比較}
+    \label{table:model}
+    \centering
+    \begin{tabular}{|l|l|}
+        \hline
+        模型 & ROUGE\\
+        \hline
+        基準實驗模型一 & \\
+        \hline
+        基準實驗模型二 & \\
+        \hline
+        專注式記憶編碼解碼器 & \\
+        \hline
+    \end{tabular}
+\end{table}
 %\subsection{更新記憶方法}
 \section{範例與分析}
-專注式機制在不同回顧的次數所專注之表現
+專注式機制在不同回顧的次數所專注之表現：
+\begin{figure}
+\end{figure}
 \section{本章總結}
-%\subsubsection{模型介紹}
