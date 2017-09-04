@@ -3,7 +3,26 @@
 
 我們可將整個問答系統分成三個部分，首先針對使用者的查詢詞，透過檢索的方式回傳符合查詢詞的文本，但由於回傳的文本過多，因此我們需要一個過濾器（Filter）來判別此文本是否有此查詢詞之答案，以便降低文本的數量。最後在將這些被選出文本與其查詢詞，通過專注式記憶編碼解碼器（Attention-based Memory RNN Encoder-Decoder）\cite{xiong2016dynamic} 抽取出可能的答案，進而回傳給使用者。本論文之研究的檢索部分是採用 Bing 搜尋來取得相關之文本，故僅針對過濾器以及專注式記憶編碼解碼器兩者進行詳細介紹。
 
-在詳細描述模型以前，我們將先簡介機器閱讀理解數據集。 Microsoft 釋出了閱讀理解相關的數據集，而以問答系統來實踐閱讀理解的概念。此數據集約莫有 10 萬筆的問答句以及約 20 萬以上的文章數，對於每個問句，都會有標註此問句的種類，如： cost to get a patent 是被分類為數值（Numeric）、 was ronald reagan a democrat 則是歸類成描述（Description）、diseases caused by clostridium 被歸為名詞（entity）、who was the president who caused the trail of tears 是為人物（Person），而 what sea is iceland in 則為地點（Location）等 5 類，表（\ref{table:query_percentage}）和表（\ref{table:query_type}）為機器閱讀理解查詢詞之比例。而 Bing 搜尋針對此問句，會提供大約 8 到 10 個左右的文本段落（Passages），人們再根據這些段落，標註此段落「是否」足夠提供問句之答案，並根據段落給予對應一至多個對應的答案。
+在詳細描述模型以前，我們將先簡介機器閱讀理解數據集。 Microsoft 釋出了閱讀理解相關的數據集，而以問答系統來實踐閱讀理解的概念。此數據集約莫有 10 萬筆的問答句以及約 20 萬以上的文章數，對於每個問句，都會有標註此問句的種類，例子如表（\ref{table:query_example} ）共 5 類，表（\ref{table:query_percentage}）和表（\ref{table:query_type}）為機器閱讀理解查詢詞之比例。而 Bing 搜尋針對此問句，會提供大約 8 到 10 個左右的文本段落（Passages），人們再根據這些段落，標註此段落「是否」足夠提供問句之答案，並根據段落給予對應一至多個對應的答案。%cost to get a patent 是被分類為數值（Numeric）、 was ronald reagan a democrat 則是歸類成描述（Description）、diseases caused by clostridium 被歸為名詞（entity）、who was the president who caused the trail of tears 是為人物（Person），而 what sea is iceland in 則為地點（Location）等 5 類，
+
+\begin{table}
+    \caption{答案種類例子}
+    \label{table:query_example}
+    \centering
+    \begin{tabular}[h]{|l|l|}
+        \hline
+        問句類型 & 例子\\
+        \hline
+        數值（Numberic） & cost to get a patent\\
+        \hline
+        描述（Description）& was ronald reagan a democrat\\
+        \hline
+        名詞（Entity） & diseases caused by clostridium\\
+        \hline
+        人物（Person） & who was the president who caused the trail of tears\\
+        \hline
+    \end{tabular}
+\end{table}
 
 \begin{table}
     \caption{問句包含詞比例}
@@ -29,6 +48,7 @@
         \hline
     \end{tabular}
 \end{table}
+
 \begin{table}
     \caption{答案種類}
     \label{table:query_type}
@@ -37,15 +57,15 @@
         \hline
         問句類型            &百分比\\
         \hline
-        描述（Description） &52.6\%\\
+        描述 &52.6\%\\
         \hline
-        數字（Numberic）    &28.4\%\\
+        數字    &28.4\%\\
         \hline
-        名詞（Entity）      &10.5\%\\
+        名詞      &10.5\%\\
         \hline
-        地點（Location）    &5.7\%\\
+        地點    &5.7\%\\
         \hline
-        人物（Person）      &2.7\%\\
+        人物      &2.7\%\\
         \hline
     \end{tabular}
 \end{table}
@@ -137,7 +157,7 @@
 \end{itemize}
 \subsection{基準實驗}
 我們總共提出兩種基準實驗模型，如圖（\ref{fig:baseline1}）及（\ref{fig:baseline2}）。
-圖（\ref{fig:baseline1}）先以問句當作編碼器的初始狀態，再將文本依序編碼，再用解碼器產生文字。圖（\ref{fig:baseline2}）則是每個句子都和問句串接一起接到編碼器，之後再用解碼器產生文字。兩者的解碼器皆有使用 \cite{bahdanau2014neural} 專注式的技巧。
+圖（\ref{fig:baseline1}）先以問句當作編碼器的初始狀態，再將文本依序編碼，再用解碼器產生文字。圖（\ref{fig:baseline2}）則是每個句子都和問句串接一起接到編碼器，之後再用解碼器產生文字。兩者的解碼器皆有使用專注式 \cite{bahdanau2014neural} 的技巧。
 %TODO describe baseline
 \begin{figure}[h]
     \centering
@@ -231,6 +251,14 @@
         \hline
     \end{tabular}
 \end{table}
+\subsection{答案種類比較}
+另外針對答案種類我們做了分析，發現數值類的結果明顯比其他四種還要好，而描述類次之，可能原因是數字類的回答敘述較為一致，而描述類包含有些是非題這種簡單容易學習的答案，且此兩者之題型相較其他題型比例亦偏多，模型也因此能夠有較好的表現。%4659,1948,537,154
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.5]{images/chap3_rouge_dist.png}
+    \caption{}
+    \label{fig:rouge_dist}
+\end{figure}
 %\subsection{更新記憶方法}
 \section{範例與分析}
 我們挑選幾個專注式機制在不同回顧的次數所專注之表現，如圖 \ref{fig:attn_1} 、 \ref{fig:attn_2} 和圖\ref{fig:attn_3}。
@@ -254,7 +282,18 @@
     \includegraphics[scale=0.55,angle=90]{images/chap3_attn4.png}
     \caption{專注式結果3}\label{fig:attn_3}
 \end{figure}
-
+%\begin{table}
+%    \caption{答案種類}
+%    \label{table:example}
+%    \centering
+%    \begin{tabular}{|l|l|l|}
+%        \hline
+%        問句 & 參考答案 & 模型答案\\
+%        \hline
+%        what means irie & Alright, powerful and pleasing, excellent\\, highest, the state of feeling great. & comfort \\
+%        \hline
+%    \end{tabular}
+%\end{table}
 %TODO analysis weight
 \begin{figure}
 \end{figure}
