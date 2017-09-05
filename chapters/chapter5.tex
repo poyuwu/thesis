@@ -52,7 +52,12 @@
 \section{實驗結果與討論}
 \subsection{變分遞迴式自動編碼器實驗}
 %TODO
-在變分遞迴式自動編碼器的結果，我們測試重建之結果，在「Yes」、「No」、「approximately \$15,000 per year」等的這種簡短的句子中，都能準確的重建出句子，但若是較長的句子，如「by an infection of oil glands in the eyelid」，仍不是特別理想，僅只能重建成「a infection of infection」。或許若是有足夠的訓練資料，會有更好的表現。
+在變分遞迴式自動編碼器的結果，我們測試重建之結果，在「Yes」、「No」、「approximately \$15,000 per year」等的這種簡短的句子中，都能準確的重建出句子，但若是較長的句子，如「by an infection of oil glands in the eyelid」，仍不是特別理想，僅只能重建成「a infection of infection」。或許若是有足夠的訓練資料，會有更好的表現，如圖 \ref{fig:chap5}。
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.7]{images/chap5.png}
+    \caption{針對答案長度分析}\label{fig:chap5}
+\end{figure}
 \subsection{問答系統模型結果}
 在此，我們對訓練好的解碼器，測試與原先的模型比較，以及對解碼器微調（Fine Tune）後的結果來分析。如表 \ref{table:vrae} 所見，我們可發現，在無微調前，直接使用預先訓練好之解碼器，所得到的結果比最初的模型結果還差；然而，若是把解碼器跟著專注式記憶編碼解碼器一起進行訓練、微調，能夠使我們的模型更加進步。%能得到我們目前模型最好的結果。
 \begin{table}[ht]

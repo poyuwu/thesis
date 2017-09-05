@@ -1,7 +1,7 @@
 \section{簡介}
-本章節以及下一個章節將對於問答系統介紹。在過去，閱讀理解和問答系統已經有很多研究提出模型，如加入專注式機制（Attention Mechanism）或急躁機制（Impatient Mechanism）的模型 \cite{hermann2015teaching} ，試圖想要模仿人類的行為，能忽視其他不重要或無關的輸入，只選擇專注於和需求有關的輸入，此方法最早在視覺圖像領域所提出，目的是希望讓機器學到圖片中所應該專注的物件（Object）或位置，而其成效也已經在圖像領域和機器翻譯中得到證實，如 \cite{mnih2014recurrent} 和 \cite{bahdanau2014neural}，另有加入了記憶（Memory）網路的 Memory Network \cite{weston2014memory} ，可以儲存理解之後的資訊，概念如同 RNN cell 一般，還有端對端記憶網路（End to End Memory Network）\cite{sukhbaatar2015end} ，透過使用回顧式的機制，來多次更新記憶。本篇論文使用了專注式機制，來選擇文本的哪些部分該注意，使用記憶網路來儲存相關的文本，並且透過回顧式機制來不斷更新記憶網路。
+本章節以及下一個章節將對於問答系統介紹。在過去，閱讀理解和問答系統已經有很多研究提出模型，如加入專注式機制（Attention Mechanism）或急躁機制（Impatient Mechanism）的模型 \cite{hermann2015teaching} ，試圖想要模仿人類的行為，能忽視其他不重要或無關的輸入，選擇只專注於和需求有關的輸入，此方法最早在視覺圖像領域所提出，目的是希望讓機器學到圖片中所應該專注的物件（Object）或位置，而其成效也已經在圖像領域和機器翻譯中得到證實，如 \cite{mnih2014recurrent} 和 \cite{bahdanau2014neural}。另有加入了記憶（Memory）網路的 Memory Network \cite{weston2014memory} ，可以儲存理解之後的資訊，概念如同 RNN 細胞一般，還有端對端記憶網路（End-to-End Memory Network）\cite{sukhbaatar2015end} ，透過使用回顧式機制，來多次更新記憶。本篇論文使用了專注式機制，來選擇文本的哪些部分該注意，使用記憶網路來儲存相關的文本，並且透過回顧式機制來反覆更新記憶網路。
 
-我們可將整個問答系統分成三個部分，首先針對使用者的查詢詞，透過檢索的方式回傳符合查詢詞的文本，但由於回傳的文本過多，因此我們需要一個過濾器（Filter）來判別此文本是否有此查詢詞之答案，以便降低文本的數量。最後在將這些被選出文本與其查詢詞，通過專注式記憶編碼解碼器（Attention-based Memory RNN Encoder-Decoder）\cite{xiong2016dynamic} 抽取出可能的答案，進而回傳給使用者。本論文之研究的檢索部分是採用 Bing 搜尋來取得相關之文本，故僅針對過濾器以及專注式記憶編碼解碼器兩者進行詳細介紹。
+我們可將整個問答系統分成三個部分，首先針對使用者的查詢詞，透過檢索的方式回傳符合查詢詞的文本。接者，由於回傳的文本過多，因此我們需要一個過濾器（Filter）來判別此文本是否有此查詢詞之答案，以便降低文本的數量。最後在將這些被選出文本與其查詢詞，通過專注式記憶編碼解碼器（Attention-based Memory RNN Encoder-Decoder）\cite{xiong2016dynamic} 抽取出可能的答案，進而回傳給使用者。本論文的檢索部分是採用 Bing 搜尋來取得相關之文本，即為數據集所提供，故本論文僅針對過濾器以及專注式記憶編碼解碼器兩者進行詳細介紹。
 
 在詳細描述模型以前，我們將先簡介機器閱讀理解數據集。 Microsoft 釋出了閱讀理解相關的數據集，而以問答系統來實踐閱讀理解的概念。此數據集約莫有 10 萬筆的問答句以及約 20 萬以上的文章數，對於每個問句，都會有標註此問句的種類，例子如表（\ref{table:query_example} ）共 5 類，表（\ref{table:query_percentage}）和表（\ref{table:query_type}）為機器閱讀理解查詢詞之比例。而 Bing 搜尋針對此問句，會提供大約 8 到 10 個左右的文本段落（Passages），人們再根據這些段落，標註此段落「是否」足夠提供問句之答案，並根據段落給予對應一至多個對應的答案。%cost to get a patent 是被分類為數值（Numeric）、 was ronald reagan a democrat 則是歸類成描述（Description）、diseases caused by clostridium 被歸為名詞（entity）、who was the president who caused the trail of tears 是為人物（Person），而 what sea is iceland in 則為地點（Location）等 5 類，
 
@@ -75,7 +75,7 @@
 圖（\ref{fig:dmn}）為本章節之系統架構圖之一。以下會針對此架構圖做分析。
 
 \subsubsection{位置編碼}
-首先每個段落透過 Natural Language Toolkit （NLTK）來做英文句子的斷句，即會得到 $M$ 個句子，每個詞都有一個詞向量 $w_j^i$，其中 $i$ 代表第 $i$ 個句子，而 $j$ 代表第 $i$ 個句子的第 $j$ 個詞，一個句子可以使用 RNN ，或者是詞袋模型（Bag of Word Model, BOW）來將編碼（Encode）成一個句向量（Sentence Vector），而此處則是採用位置編碼（Position Encoding）\cite{sukhbaatar2015end}  ，如式子（\ref{PE}），此處使用位置編碼的原因，一方面若是使用詞袋模型，會少了每個詞在句子上順序的重要性，另一方面，使用 RNN 模型雖然能夠有順序之別，但由於本篇論文模型過於複雜，若是使用 RNN 模型，將會有兩層 RNN 來處理詞彙與句子，因此會容易過度貼合，因此本篇論文採取折衷的方法，是採用位置編碼，可以得到每個句子的句向量 $f_i$ 代表第 $i$ 個句子
+首先每個段落透過 Natural Language Toolkit （NLTK）來做英文句子的斷句，即會得到 $M$ 個句子，每個詞都有一個詞向量 $w_j^i$，其中 $i$ 代表第 $i$ 個句子，而 $j$ 代表第 $i$ 個句子的第 $j$ 個詞，一個句子可以使用 RNN ，或者是詞袋模型（Bag of Word Model, BOW）將其編碼（Encode）成一個句向量（Sentence Vector），而此處則是採用位置編碼（Position Encoding）\cite{sukhbaatar2015end}  ，如式子（\ref{PE}），此處使用位置編碼的原因，一方面若是使用詞袋模型，會少了每個詞在句子上順序的重要性，另一方面，使用 RNN 模型雖然能夠有順序之別，但由於本篇論文模型過於複雜，若是使用 RNN 模型，將分別會有兩層 RNN 來處理詞彙與句子，會容易過度貼合，因此本篇論文採取折衷的方法，是採用位置編碼，可以得到每個句子的句向量 $f_i$ 代表第 $i$ 個句子
 
 \begin{equation}
     f_i = \sum_{j=1}^M l_j \circ w_j^i
@@ -92,7 +92,7 @@
     \caption{專注式記憶編碼解碼器}\label{fig:dmn}
 \end{figure}
 \subsubsection{雙向式遞迴式類神經網路}
-在得到句向量 $f_i$ 後，為了強化句子與句子彼此之間的關聯性，我們採取了雙向式遞迴式類神經網路（Bidirectional Recurrent Neural Network, BRNN），是由兩個遞迴式類神經網路，一為正向（Forward）遞迴式類神經網路輸出向量表示 $\overrightarrow{f_i}$ ，另一為反向（Backward）遞迴式類神經網路輸出向量表示 $\overleftarrow{f_i}$ ，並且取正向遞迴式類神經網路的第 $i$ 個時間點輸出向量 $\overrightarrow{f_i}$ ，與反向遞迴式類神經網路的第 $i$ 個時間點 $\overleftarrow{f_{M-i}}$ ，並把他們相加起來作為每個句子的向量表示 $\overleftrightarrow{f_i} = \overrightarrow{f_i} + \overleftarrow{f_i}$ ，即為圖（\ref{fig:dmn}）中 GRU 之輸出。雖然採取了雙向式遞迴式類神經網路，但依然容易失去長期的資訊，且我們不僅僅只是要讀過文本而已，我們更需要結合查詢詞來回答問題，因此在此處我們導入了專注式機制（Attention Mechanism）的技術。
+在得到句向量 $f_i$ 後，為了強化句子與句子彼此之間的關聯性，我們採取了雙向式遞迴式類神經網路（Bidirectional Recurrent Neural Network, BRNN），是由兩個遞迴式類神經網路，一為正向（Forward）遞迴式類神經網路輸出向量表示 $\overrightarrow{f_i}$ ，另一為反向（Backward）遞迴式類神經網路輸出向量表示 $\overleftarrow{f_i}$ ，並且取正向遞迴式類神經網路的第 $i$ 個時間點輸出向量 $\overrightarrow{f_i}$ ，與反向遞迴式類神經網路的第 $i$ 個時間點 $\overleftarrow{f_{M-i}}$ ，並把他們相加起來作為每個句子的向量表示 $\overleftrightarrow{f_i} = \overrightarrow{f_i} + \overleftarrow{f_{M-i}}$ ，即為圖（\ref{fig:dmn}）中 GRU 之輸出。雖然採取了雙向式遞迴式類神經網路，但依然容易失去長期的資訊，且我們不僅僅只是要讀過文本而已，我們更需要結合查詢詞來回答問題，因此在此處我們導入了專注式機制的技術。
 
 \subsubsection{專注式機制}
 專注式的機制，就是為了比較查詢詞 $Q$ 與文本 $\overleftrightarrow{f_i}$ 之間的相關性，然而專注式機制的實作方法有很多，但核心的概念是為了找尋兩者間之相似性（Similarity），即稱為專注式權重 $\alpha_i$ ，以下是幾種常見計算專注式權重之方法：
@@ -243,9 +243,15 @@
         \hline
         ReasoNet Baseline \cite{shen2016reasonet}& 19.20\% \\
         \hline
-        FastQA \cite{weissenborn2017making} &32.09\% \\
+        FastQA \cite{weissenborn2017making} & 33.67\% \\
         \hline
         專注式記憶編碼解碼器 &  33.95\% \\ %best\_score
+        \hline
+        Prediction \cite{wang2016machine} & 37.33\% \\
+        \hline
+        ReasoNet \cite{shen2016reasonet} & 38.81\% \\
+        \hline
+        R-Net & 42.89\% \\
         \hline
         Human Performance &47\% \\ %TODO 中文
         \hline
@@ -255,31 +261,31 @@
 另外針對答案種類我們做了分析，發現數值類的結果明顯比其他四種還要好，而描述類次之，可能原因是數字類的回答敘述較為一致，而描述類包含有些是非題這種簡單容易學習的答案，且此兩者之題型相較其他題型比例亦偏多，模型也因此能夠有較好的表現。%4659,1948,537,154
 \begin{figure}
     \centering
-    \includegraphics[scale=0.5]{images/chap3_rouge_dist.png}
-    \caption{}
+    \includegraphics[scale=0.7]{images/chap3_rouge_dist.png}
+    \caption{答案種類之 ROUGE 分數}
     \label{fig:rouge_dist}
 \end{figure}
 %\subsection{更新記憶方法}
 \section{範例與分析}
-我們挑選幾個專注式機制在不同回顧的次數所專注之表現，如圖 \ref{fig:attn_1} 、 \ref{fig:attn_2} 和圖\ref{fig:attn_3}。
+我們挑選幾個專注式機制在不同回顧的次數所專注之表現，如圖 \ref{fig:attn_1} 、 \ref{fig:attn_2} 和圖 \ref{fig:attn_3}。
 
 圖 \ref{fig:attn_1} 的問句為「how many years to become an accountant」，答案為「Four year」，與我們模型產生的句子結果一樣。而看圖可發現回顧三次可以會越來越集中於含有標準答案資訊的句子。再看
 圖 \ref{fig:attn_2} ，其問句為「what region is indiana in」，答案為「U.S」，而我們模型產生的是「north county」，雖專注的點正確了，但卻與答案不同，僅僅對了部分的意思，並未提及美國相關的詞，我們進一步觀察到在其他訓練階段所產生的句子有「united states」、「north america」跟「us」等，由此可見，模型應該有學習到答案是「美國」相關的意思。
 \begin{figure}
     \centering
-    \includegraphics[scale=0.55,angle=90]{images/chap3_attn1.png}
+    \includegraphics[scale=0.6,angle=90]{images/chap3_attn1.png}
     \caption{專注式結果1}\label{fig:attn_1}
 \end{figure}
 \begin{figure}
     \centering
-    \includegraphics[scale=0.58,angle=90]{images/chap3_attn2.png}
+    \includegraphics[scale=0.65,angle=90]{images/chap3_attn2.png}
     \caption{專注式結果2}\label{fig:attn_2}
 \end{figure}
 
 圖 \ref{fig:attn_3} 為一反例，其問句為「what means irie」，答案是「Alright, powerful and pleasing, excellent, highest, the state of feeling great.」，而我們模型所生成之答案為「comfort」，並無與答案完全一樣的字詞，且其專注點位於第一句「Irie (I rie I '  ree) is the word in Jamaican Patois that means, alright.」，而以我們人類角度來看，與答案有相關的應為第二句「The term can be used to mean 1: powerful and pleasing; 2: excellent, highest; n 3: the state of feeling great.」。
 \begin{figure}
     \centering
-    \includegraphics[scale=0.55,angle=90]{images/chap3_attn4.png}
+    \includegraphics[scale=0.6,angle=90]{images/chap3_attn3.png}
     \caption{專注式結果3}\label{fig:attn_3}
 \end{figure}
 %\begin{table}
@@ -298,6 +304,6 @@
 \begin{figure}
 \end{figure}
 \section{本章總結}
-在本章節我們試著針對問句與其對應之文本，來產生可能之答案，可見我們在有限制領域裡，已經能有不錯的表現，達到 33.95 \% 。然而，要能夠回答更廣泛的問題，我們需要有效的方法，找出可能含有答案的文本，這部分我們將在第四章介紹。另外，我們發現對於要回答過長的句子，失真的可能性相當高，對此解決方法，我們將在第五章介紹。
+在本章節我們試著針對問句與其對應之文本，來產生可能之答案，可見我們在限制領域裡，已經能有不錯的表現，達到 33.95 \% ，雖然有些模型的表現比我們的模型好，但此處我們的方法並不僅僅侷限於文章中的抽取，而是靠著機器產生出最可能的句子。然而，要能夠回答更廣泛的問題，我們需要有效的方法，找出可能含有答案的文本，這部分我們將在第四章介紹。另外，我們發現對於要回答過長的句子，失真的可能性相當高，對此解決方法，我們將在第五章介紹。
 %從實驗當中可以發現，我們已經不難從單一文本之中產生答案，然而
 %雖然機器可以回答出部分的正確問題，但在此處我們是基於特定文本，以期望機器給予正確回答，但現實情況中，我們必須基於大量的資訊，因此我們要試著從大量的資訊中挑選出相關的文本，能使我們的模型更加有用。
