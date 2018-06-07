@@ -75,20 +75,32 @@
 圖（\ref{fig:dmn}）為本章節之系統架構圖之一。以下會針對此架構圖做分析。
 
 \subsubsection{位置編碼}
-首先每個段落透過 Natural Language Toolkit （NLTK）來做英文句子的斷句，即會得到 $M$ 個句子，每個詞都有一個詞向量 $w_j^i$，其中 $i$ 代表第 $i$ 個句子，而 $j$ 代表第 $i$ 個句子的第 $j$ 個詞，一個句子可以使用 RNN ，或者是詞袋模型（Bag of Word Model, BOW）將其編碼（Encode）成一個句向量（Sentence Vector），而此處則是採用位置編碼（Position Encoding）\cite{sukhbaatar2015end}  ，如式子（\ref{PE}），此處使用位置編碼的原因，一方面若是使用詞袋模型，會少了每個詞在句子上順序的重要性，另一方面，使用 RNN 模型雖然能夠有順序之別，但由於本篇論文模型過於複雜，若是使用 RNN 模型，將分別會有兩層 RNN 來處理詞彙與句子，會容易過度貼合，因此本篇論文採取折衷的方法，是採用位置編碼，可以得到每個句子的句向量 $f_i$ 代表第 $i$ 個句子
+首先每個段落透過 Natural Language Toolkit （NLTK）來做英文句子的斷句，即會得到 $M$ 個句子，每個詞都有一個詞向量 $w_j^i$，其中 $i$ 代表第 $i$ 個句子，而 $j$ 代表第 $i$ 個句子的第 $j$ 個詞，一個句子可以使用 RNN ，或者是詞袋模型（Bag of Word Model, BOW）將其編碼（Encode）成一個句向量（Sentence Vector），而此處則是採用位置編碼（Position Encoding）\cite{sukhbaatar2015end}  ，如式子（\ref{PE}），此處使用位置編碼的原因，一方面若是使用詞袋模型，會少了每個詞在句子上順序的重要性，另一方面，使用 RNN 模型雖然能夠有順序之別，但由於本篇論文模型過於複雜，若是使用 RNN 模型，將分別會有兩層 RNN 來處理詞彙與句子，如表（\ref{table:position}），因此本篇論文採取折衷的方法，是採用位置編碼，可以得到每個句子的句向量 $f_i$ 代表第 $i$ 個句子%，會容易過度貼合，
 
 \begin{equation}
-    f_i = \sum_{j=1}^M l_j \circ w_j^i
+    f_i = \sum_{j=1}^N l_j \circ w_j^i
 \end{equation}
 其中 $\circ$ 為逐點乘積，而 $l_j$ 則為
 \begin{equation}
-    l_{jd} = (1 - \frac{j}{M}) - (\frac{d}{D})(1 - \frac{2j}{M}) \label{PE}
+    l_{jd} = (1 - \frac{j}{N}) - (\frac{d}{D})(1 - \frac{2j}{N}) \label{PE}
 \end{equation}
 其中 $d$ 是詞向量的第 $d$ 維， $D$ 是詞向量的維度，$j$ 代表一句話的第 $j$ 個詞。
 
+\begin{table}
+    \caption{位置編碼}
+    \label{table:position}
+    \centering
+    \begin{tabular}{|l|l|l|l|}
+    \hline
+    讀句子方法 & Mean    & RNN     & 位置編碼 \\
+    \hline
+    ROUGE      & 25.44\% & 32.76\% & 33.95\% \\
+    \hline
+    \end{tabular}
+\end{table}
 \begin{figure}[h]
     \centering
-    \includegraphics[scale=0.54]{images/chap3_dmn.png}
+    \includegraphics[scale=0.47]{images/chap3_dmn.png}
     \caption{專注式記憶編碼解碼器}\label{fig:dmn}
 \end{figure}
 \subsubsection{雙向式遞迴式類神經網路}
@@ -113,7 +125,7 @@
 
 接著我們讓 $z_i$ 通過兩層類神經網路，可得一純量 $Z_i$。在得到了專注式權重 $Z_i$ 以後，我們對其做正規化，此處我們選擇「對所有句子的 $\alpha$ 值通過軟性最大化」，通過軟性最大化可以更加強化相關的句子，降低其餘句子的雜訊，如式子（$\ref{function:attention}$）。
 \begin{equation}
-    g_i = \frac{exp{(Z_i)}}{\sum_{k=1}^{M} exp(Z_i)} \label{function:attention}
+    g_i = \frac{exp{(Z_i)}}{\sum_{k=1}^{M} exp(Z_k)} \label{function:attention}
 \end{equation}
 
 結合正規化後的專注式權重 $g_i$ ，我們可對於文章抽取出基於我們想要專注點的語境向量（Contextual Vector），如式子（\ref{function:context_vector}）。
@@ -192,7 +204,7 @@
     \end{tabular}
 \end{table}
 \subsection{回顧次數}
-我們在此測試回顧次數對模型之影響的影響。如表 \ref{table:hop} 可見，最佳的情況是發生在兩次的情形。%可能不需要太多次的回顧，甚至有些語意只需要一次便能理解。
+我們在此測試回顧次數對模型之影響的影響。如表（\ref{table:hop}）可見，最佳的情況是發生在兩次的情形。%可能不需要太多次的回顧，甚至有些語意只需要一次便能理解。
 \begin{table}
     \caption{回顧次數實驗結果}
     \label{table:hop}
@@ -257,6 +269,24 @@
         \hline
     \end{tabular}
 \end{table}
+
+另外我們針對 yes-no 問句分析，發現若模型預測的答案是 yes/no ，那麼相對 no/yes 的機率亦非常高，因此我們再進一步分析可能的原因，發現開頭為 is/will/do/can 等 yes/no 問句，則模型就有高機率預測 yes/no，680 幾句中，僅只有 10 幾句不是預測 yes/no 的答案，例如某一題問句為「will smith actor height」，模型預測的答案就為「yes」，綜合以上，我們認為是模型學習到的可能是問句的形式，另外從另一個角度來看，若預測的答案為 yes/no ，但答案不為這種問局的比例約為 34/837 。我們再從預測 yes/no 的情形去分析，在我們模型預測 yes/no 時，答案是否為 yes/no ，如表（\ref{table:yes_no}）。
+
+\begin{table}
+    \caption{yes/no 分析}
+    \label{table:yes_no}
+    \centering
+    \begin{tabular}{|l|l|l|}
+        \hline
+        數量 & 預測 yes & 預測no \\
+        \hline
+        答案為 yes & 452 & 62 \\
+        \hline
+        答案為 no & 112 & 35 \\
+        \hline
+    \end{tabular}
+\end{table}
+
 \subsection{答案種類比較}
 另外針對答案種類我們做了分析，發現數值類的結果明顯比其他四種還要好，而描述類次之，可能原因是數字類的回答敘述較為一致，而描述類包含有些是非題這種簡單容易學習的答案，且此兩者之題型相較其他題型比例亦偏多，模型也因此能夠有較好的表現。%4659,1948,537,154
 \begin{figure}
